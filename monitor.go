@@ -11,10 +11,22 @@ type MonitorConf struct {
 	Data map[string]string
 }
 
+type MonitorLog struct {
+	Up      bool
+	Time    time.Time
+	Message string
+	Monitor *Monitor
+}
+
 type Monitor struct {
 	Conf    *MonitorConf
 	Checker Checker
 	Up      bool
+	Logs    []*MonitorLog
+}
+
+func NewMonitorLog(up bool, message string) *MonitorLog {
+	return &MonitorLog{up, time.Now(), message, nil}
 }
 
 func NewMonitor(conf *MonitorConf) (*Monitor, error) {
@@ -23,18 +35,19 @@ func NewMonitor(conf *MonitorConf) (*Monitor, error) {
 		return nil, err
 	}
 
-	return &Monitor{conf, checker, false}, nil
+	return &Monitor{conf, checker, false, nil}, nil
 }
 
-func (m *Monitor) Watch(monitorChan chan *Monitor) {
+func (m *Monitor) Watch(logChan chan *MonitorLog) {
 	for {
-		newUp, err := m.Checker(m.Conf)
-		if err != nil {
-			panic(err)
-		}
+		monitorLog := m.Checker(m.Conf)
+		monitorLog.Monitor = m
 
-		m.Up = newUp
-		monitorChan <- m
+		logChan <- monitorLog
+
+		m.Logs = append(m.Logs, monitorLog)
+		m.Up = monitorLog.Up
+
 		nextCheck, _ := time.ParseDuration(m.Conf.Freq)
 		time.Sleep(nextCheck)
 	}
