@@ -1,6 +1,7 @@
 package main
 
 import (
+	"sort"
 	"time"
 )
 
@@ -42,6 +43,11 @@ func (logs MonitorLogs) Less(i int, j int) bool {
 	return logs[i].Time.Before(logs[j].Time)
 }
 
+func (logs MonitorLogs) Add(log *MonitorLog) {
+	logs = append(logs, log)
+	sort.Sort(logs)
+}
+
 func NewMonitor(conf *MonitorConf) (*Monitor, error) {
 	checker, err := GetChecker(conf.Type)
 	if err != nil {
@@ -58,7 +64,7 @@ func (m *Monitor) Watch(logChan chan *MonitorLog) {
 
 		logChan <- monitorLog
 
-		m.Logs = append(m.Logs, monitorLog)
+		m.Logs.Add(monitorLog)
 
 		nextCheck, _ := time.ParseDuration(m.Conf.Freq)
 		time.Sleep(nextCheck)
