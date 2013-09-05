@@ -18,14 +18,28 @@ type MonitorLog struct {
 	Monitor *Monitor
 }
 
+type MonitorLogs []*MonitorLog
+
 type Monitor struct {
 	Conf    *MonitorConf
 	Checker Checker
-	Logs    []*MonitorLog
+	Logs    MonitorLogs
 }
 
 func NewMonitorLog(up bool, message string) *MonitorLog {
 	return &MonitorLog{up, time.Now(), message, nil}
+}
+
+func (logs MonitorLogs) Len() int {
+	return len(logs)
+}
+
+func (logs MonitorLogs) Swap(i int, j int) {
+	logs[i], logs[j] = logs[j], logs[i]
+}
+
+func (logs MonitorLogs) Less(i int, j int) bool {
+	return logs[i].Time.Before(logs[j].Time)
 }
 
 func NewMonitor(conf *MonitorConf) (*Monitor, error) {
