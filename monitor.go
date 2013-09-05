@@ -70,3 +70,7 @@ func (m *Monitor) Watch(logChan chan *MonitorLog) {
 		time.Sleep(nextCheck)
 	}
 }
+
+func (m *Monitor) LastLog() *MonitorLog {
+	return m.Logs[m.Logs.Len()-1]
+}
