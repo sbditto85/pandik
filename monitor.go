@@ -21,7 +21,6 @@ type MonitorLog struct {
 type Monitor struct {
 	Conf    *MonitorConf
 	Checker Checker
-	Up      bool
 	Logs    []*MonitorLog
 }
 
@@ -35,7 +34,7 @@ func NewMonitor(conf *MonitorConf) (*Monitor, error) {
 		return nil, err
 	}
 
-	return &Monitor{conf, checker, false, nil}, nil
+	return &Monitor{conf, checker, nil}, nil
 }
 
 func (m *Monitor) Watch(logChan chan *MonitorLog) {
@@ -46,7 +45,6 @@ func (m *Monitor) Watch(logChan chan *MonitorLog) {
 		logChan <- monitorLog
 
 		m.Logs = append(m.Logs, monitorLog)
-		m.Up = monitorLog.Up
 
 		nextCheck, _ := time.ParseDuration(m.Conf.Freq)
 		time.Sleep(nextCheck)
